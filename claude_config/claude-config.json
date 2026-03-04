@@ -1,0 +1,47 @@
+{
+  "repository": {
+    "name": "FSM-CSharp",
+    "owner": "PlayerCreed",
+    "language": "C#",
+    "id": 1172579690
+  },
+  "test_config": {
+    "boundary_testing": {
+      "enabled": true,
+      "strategies": [
+        "input_edge_cases",
+        "state_transitions",
+        "unexpected_behaviors"
+      ],
+      "outputs": {
+        "logs": "./logs/",
+        "error_reports": "./reports/errors/"
+      }
+    },
+    "test_cases": {
+      "generate_use_cases": "true",
+      "include_default_assertions": "true",
+      "cover_paths": ["src/", "fsm/"],
+      "test_output_directory": "./tests/"
+    }
+  },
+  "documentation": {
+    "auto_generate": true,
+    "include": ["README.md", "docs/"],
+    "integrate_examples": true,
+    "examples_path": "./examples/",
+    "output_directory": "./docs/"
+  },
+  "claude_code_settings": {
+    "ai_assistance": {
+      "enable": true,
+      "task_types": ["test_generator", "documentation_writer"],
+      "boundary_test_analysis": "enabled"
+    },
+    "integration_options": {
+      "trigger_on_commit": true,
+      "continuous_feedback_loop": true,
+      "optimize_for_repository": true
+    }
+  }
+}
