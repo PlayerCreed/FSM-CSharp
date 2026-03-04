@@ -4,41 +4,41 @@ using Fox.FSM;
 namespace FSMExample
 {
     /// <summary>
-    /// Basic FSM example demonstrating a simple player state machine.
-    /// States: Idle -> Run -> Jump -> (back to Idle or Run)
+    /// 基础 FSM 示例：演示简单的玩家状态机
+    /// 状态流转：Idle -> Run -> Jump -> (回到 Idle 或 Run)
     /// </summary>
     public class BasicUsageExample
     {
         public static void Main(string[] args)
         {
-            // Create and enable the FSM
+            // 创建并启用 FSM
             var playerFSM = new PlayerFSM("Player");
-            playerFSM.isEnable = true;
+            playerFSM.IsEnabled = true;
 
-            Console.WriteLine("=== FSM Basic Usage Example ===\n");
+            Console.WriteLine("=== FSM 基础使用示例 ===\n");
 
-            // Simulate game loop
+            // 模拟游戏循环
             for (int i = 0; i < 10; i++)
             {
-                Console.WriteLine($"--- Frame {i + 1} ---");
+                Console.WriteLine($"--- 帧 {i + 1} ---");
 
-                // Simulate input (in real usage, this would be actual input)
+                // 模拟输入（实际使用时从输入设备读取）
                 PlayerInput.IsRunning = i >= 2 && i <= 5;
                 PlayerInput.IsJumping = i == 4;
 
-                // Update the FSM
+                // 更新 FSM
                 playerFSM.Update();
             }
 
-            Console.WriteLine("\n=== Example Complete ===");
+            Console.WriteLine("\n=== 示例结束 ===");
         }
     }
 
-    #region Input Simulation
+    #region 输入模拟
 
     /// <summary>
-    /// Simulated input for demonstration purposes.
-    /// In a real application, this would read from actual input devices.
+    /// 模拟输入类（演示用）
+    /// 实际应用中应从输入设备读取
     /// </summary>
     public static class PlayerInput
     {
@@ -48,10 +48,10 @@ namespace FSMExample
 
     #endregion
 
-    #region FSM Driver
+    #region FSM 驱动器
 
     /// <summary>
-    /// Root driver for the player state machine.
+    /// 玩家状态机的根驱动器
     /// </summary>
     public class PlayerFSM : FSMDriver
     {
@@ -63,7 +63,7 @@ namespace FSMExample
 
         protected override void InitObject()
         {
-            // Create states
+            // 创建所有状态
             new IdleState(this);
             new RunState(this);
             new JumpState(this);
@@ -72,66 +72,66 @@ namespace FSMExample
 
     #endregion
 
-    #region States
+    #region 状态定义
 
     /// <summary>
-    /// Idle state - player is standing still.
+    /// 空闲状态 - 玩家站立不动
     /// </summary>
     public class IdleState : FSMState
     {
         public IdleState(FSMStateLayer layer) : base("Idle", layer)
         {
-            // Register transitions from Idle
+            // 注册从 Idle 出发的转换
             new IdleToRunTransition(this);
             new IdleToJumpTransition(this);
         }
 
         internal override void OnStateEnter()
         {
-            Console.WriteLine("[Idle] Entered idle state");
+            Console.WriteLine("[Idle] 进入空闲状态");
         }
 
         internal override void OnUpdate()
         {
-            Console.WriteLine("[Idle] Standing still...");
+            Console.WriteLine("[Idle] 站立中...");
         }
 
         internal override void OnStateExit()
         {
-            Console.WriteLine("[Idle] Leaving idle state");
+            Console.WriteLine("[Idle] 离开空闲状态");
         }
     }
 
     /// <summary>
-    /// Run state - player is moving.
+    /// 跑步状态 - 玩家正在移动
     /// </summary>
     public class RunState : FSMState
     {
         public RunState(FSMStateLayer layer) : base("Run", layer)
         {
-            // Register transitions from Run
+            // 注册从 Run 出发的转换
             new RunToIdleTransition(this);
             new RunToJumpTransition(this);
         }
 
         internal override void OnStateEnter()
         {
-            Console.WriteLine("[Run] Started running");
+            Console.WriteLine("[Run] 开始跑步");
         }
 
         internal override void OnUpdate()
         {
-            Console.WriteLine("[Run] Running...");
+            Console.WriteLine("[Run] 跑步中...");
         }
 
         internal override void OnStateExit()
         {
-            Console.WriteLine("[Run] Stopped running");
+            Console.WriteLine("[Run] 停止跑步");
         }
     }
 
     /// <summary>
-    /// Jump state - player is in the air.
+    /// 跳跃状态 - 玩家在空中
     /// </summary>
     public class JumpState : FSMState
     {
@@ -140,7 +140,7 @@ namespace FSMExample
 
         public JumpState(FSMStateLayer layer) : base("Jump", layer)
         {
-            // Register transitions from Jump
+            // 注册从 Jump 出发的转换
             new JumpToIdleTransition(this);
             new JumpToRunTransition(this);
         }
@@ -148,18 +148,18 @@ namespace FSMExample
         internal override void OnStateEnter()
         {
             jumpFrameCount = 0;
-            Console.WriteLine("[Jump] Jumped!");
+            Console.WriteLine("[Jump] 跳起！");
         }
 
         internal override void OnUpdate()
         {
             jumpFrameCount++;
-            Console.WriteLine($"[Jump] In air (frame {jumpFrameCount})");
+            Console.WriteLine($"[Jump] 空中 (第 {jumpFrameCount} 帧)");
         }
 
         internal override void OnStateExit()
         {
-            Console.WriteLine("[Jump] Landed");
+            Console.WriteLine("[Jump] 落地");
         }
 
         public bool IsJumpComplete => jumpFrameCount >= JumpDuration;
@@ -167,7 +167,7 @@ namespace FSMExample
 
     #endregion
 
-    #region Transitions
+    #region 转换定义
 
     // Idle -> Run
     public class IdleToRunTransition : FSMObject.FSMTranslation
@@ -179,7 +179,7 @@ namespace FSMExample
     }
 
     // Idle -> Jump
-    public class IdleToJumpTransition : FSMObject.FSMTransition
+    public class IdleToJumpTransition : FSMObject.FSMTranslation
     {
         public override bool IsValid => PlayerInput.IsJumping && !PlayerInput.IsRunning;
         public override string NextObject => "Jump";

@@ -12,45 +12,22 @@
 
 | 属性 | 类型 | 访问级别 | 说明 |
 |------|------|---------|------|
-| `Key` | `int` | `public` | 主键标识符，用于高性能查找 |
-| `Name` | `string` | `public` | 辅助描述字段，用于调试和日志 |
+| `Name` | `string` | `public` | 状态对象的名称标识符 |
 | `Root` | `FSMObject` | `protected` | 获取 FSM 层次结构的根对象 |
 
 ### 构造函数
-
-#### 使用整数键（高性能模式）
-
-```csharp
-public FSMObject(int key, FSMStateLayer layer)
-```
-
-创建一个以整数键为主键的 FSMObject。
-
-**参数:**
-- `key` - 主键标识符（在层级内唯一）
-- `layer` - 父层级（根对象可为 `null`）
-
-**行为:**
-- `Key` = `key`
-- `Name` = `null`
-
-#### 使用字符串名称（兼容模式）
 
 ```csharp
 public FSMObject(string name, FSMStateLayer layer)
 ```
 
-创建一个以字符串命名的 FSMObject，Key 自动从名称哈希计算。
+创建一个新的 FSMObject 并自动注册到父层级。
 
 **参数:**
-- `name` - 描述性名称（在层级内唯一）
+- `name` - 对象的唯一标识符（在层级内唯一）
 - `layer` - 父层级（根对象可为 `null`）
 
-**行为:**
-- `Key` = `name.GetHashCode()`
-- `Name` = `name`
-
-### 方法
+### 生命周期方法
 
 | 方法 | 返回类型 | 说明 |
 |------|---------|------|
@@ -66,8 +43,7 @@ public FSMObject(string name, FSMStateLayer layer)
 public abstract class FSMTranslation
 {
     public abstract bool IsValid { get; }
-    public virtual string NextObject { get; }
-    public virtual int NextKey { get; }
+    public abstract string NextObject { get; }
 
     public FSMTranslation(FSMObject ob);
     internal virtual void OnTransition();
@@ -75,16 +51,16 @@ public abstract class FSMTranslation
 ```
 
 **属性:**
-- `IsValid` - 返回 `true` 触发转换
-- `NextObject` - 目标状态名称（向后兼容）
-- `NextKey` - 目标状态键值（高性能）
+| 属性 | 类型 | 说明 |
+|------|------|------|
+| `IsValid` | `bool` | 返回 `true` 时触发转换 |
+| `NextObject` | `string` | 目标状态名称 |
 
 **构造函数:**
-- 自动将转换注册到父 `FSMObject`
+- 自动将转换注册到父 `FSMObject`，无需手动调用
 
-**使用建议:**
-- 使用 `NextKey` 获得最佳性能
-- 使用 `NextObject` 保持代码可读性
+**可重写方法:**
+- `OnTransition()` - 转换执行时的回调，可用于添加转换时的逻辑
 
 ---
 
@@ -95,12 +71,11 @@ public abstract class FSMTranslation
 ```csharp
 public abstract class FSMState : FSMObject
 {
-    public FSMState(int key, FSMStateLayer layer);
     public FSMState(string name, FSMStateLayer layer);
 }
 ```
 
-继承 `FSMObject` 的所有功能。重写生命周期方法定义状态行为。
+继承 `FSMObject` 的所有功能。重写生命周期方法定义具体状态行为。
 
 ---
 
@@ -112,34 +87,30 @@ public abstract class FSMState : FSMObject
 
 | 属性 | 类型 | 访问级别 | 说明 |
 |------|------|---------|------|
-| `InitialKey` | `int` | `abstract protected` | 初始状态的键值 |
-| `InitialObject` | `string` | `protected virtual` | 初始状态的名称（默认 `null`） |
-| `activeObject` | `FSMObject` | `protected` | 当前激活的状态 |
+| `InitialObject` | `string` | `abstract protected` | 初始状态的名称 |
+| `activeObject` | `FSMObject` | `protected` | 当前激活的状态对象 |
 
 ### 构造函数
 
 ```csharp
-public FSMStateLayer(int key, FSMStateLayer layer)
 public FSMStateLayer(string name, FSMStateLayer layer)
 ```
 
 初始化层级，调用 `InitObject()`，并设置初始激活状态。
 
 **抛出异常:**
-- `InvalidOperationException` - 如果初始化后找不到初始状态
+- `InvalidOperationException` - 如果初始化后找不到 `InitialObject` 指定的状态
 
 ### 方法
 
 | 方法 | 返回类型 | 说明 |
 |------|---------|------|
-| `InitObject()` | `void` | 抽象方法，初始化子状态 |
-| `GetObject(int key)` | `FSMObject` | 通过键值获取状态 |
-| `GetObject(string name)` | `FSMObject` | 通过名称获取状态 |
-| `GetKey(string name)` | `int` | 获取名称对应的键值 |
+| `InitObject()` | `void` | 抽象方法，在此创建并添加子状态 |
+| `GetObject(string name)` | `FSMObject` | 通过名称获取状态对象 |
 | `OnUpdate()` | `void` | 处理转换并更新激活状态 |
 
 **异常:**
-- `ArgumentException` - `AddObject` 时键值或名称重复
+- `ArgumentException` - `AddObject` 时名称重复
 - `InvalidOperationException` - 转换目标状态不存在
 
 ---
@@ -151,9 +122,8 @@ public FSMStateLayer(string name, FSMStateLayer layer)
 ```csharp
 public abstract class FSMDriver : FSMStateLayer
 {
-    public bool isEnable = false;
+    public bool IsEnabled { get; set; }
 
-    protected FSMDriver(int key);
     protected FSMDriver(string name);
     public void Update();
 }
@@ -163,7 +133,7 @@ public abstract class FSMDriver : FSMStateLayer
 
 | 属性 | 类型 | 说明 |
 |------|------|------|
-| `isEnable` | `bool` | 控制 `Update()` 是否处理状态机 |
+| `IsEnabled` | `bool` | 控制 `Update()` 是否处理状态机，默认 `false` |
 
 ### 方法
 
@@ -171,25 +141,110 @@ public abstract class FSMDriver : FSMStateLayer
 public void Update()
 ```
 
-每帧从游戏循环调用此方法。仅在 `isEnable` 为 `true` 时处理。
+每帧从游戏循环调用此方法。仅在 `IsEnabled` 为 `true` 时处理状态转换和更新。
 
 ---
 
 ## 异常参考
 
-| 异常 | 抛出位置 | 条件 |
-|------|---------|------|
-| `ArgumentException` | `FSMStateLayer.AddObject` | 键值或名称重复 |
+| 异常类型 | 抛出位置 | 触发条件 |
+|---------|---------|---------|
+| `ArgumentException` | `FSMStateLayer.AddObject` | 状态名称重复 |
 | `InvalidOperationException` | `FSMStateLayer` 构造函数 | 初始状态未找到 |
-| `InvalidOperationException` | `FSMStateLayer.OnUpdate` | 转换目标状态未找到 |
+| `InvalidOperationException` | `FSMStateLayer.OnUpdate` | 转换目标状态不存在 |
 
 ---
 
-## 性能建议
+## 使用模式
 
-| 场景 | 推荐方式 | 原因 |
-|------|---------|------|
-| 高频状态查找 | `int Key` | 字典 O(1) 查找，无字符串比较 |
-| 调试/日志 | `string Name` | 可读性好 |
-| 网络同步 | `int Key` | 序列化体积小 |
-| 配置文件 | `string Name` | 可读性好，Key 自动计算 |
+### 基本状态模式
+
+```
+┌─────────┐    IsValid    ┌─────────┐
+│ State A │ ────────────► │ State B │
+└─────────┘               └─────────┘
+     ▲                         │
+     │        IsValid          │
+     └────────────────────────┘
+```
+
+### 层级状态模式
+
+```
+              ┌──────────────┐
+              │   FSMDriver  │
+              └──────┬───────┘
+                     │
+        ┌────────────┴────────────┐
+        ▼                         ▼
+┌───────────────┐         ┌───────────────┐
+│ StateLayer A  │         │ StateLayer B  │
+├───────────────┤         ├───────────────┤
+│ • State A1    │         │ • State B1    │
+│ • State A2    │         │ • State B2    │
+└───────────────┘         └───────────────┘
+```
+
+---
+
+## 最佳实践
+
+### 1. 状态命名规范
+使用清晰、描述性的名称，便于调试：
+
+```csharp
+// 推荐
+new IdleState("Player_Idle", this);
+new RunState("Player_Run", this);
+
+// 不推荐
+new IdleState("state1", this);
+```
+
+### 2. 转换条件封装
+将复杂的转换条件封装到方法中：
+
+```csharp
+public class IdleToRunTransition : FSMObject.FSMTranslation
+{
+    public override bool IsValid => CanStartRunning();
+    public override string NextObject => "Run";
+
+    private bool CanStartRunning()
+    {
+        return Input.IsMoving && player.IsGrounded && player.Stamina > 0;
+    }
+}
+```
+
+### 3. 生命周期方法
+避免在 `OnUpdate()` 中执行耗时操作：
+
+```csharp
+internal override void OnUpdate()
+{
+    // 推荐：轻量级逻辑
+    ProcessInput();
+    UpdateAnimation();
+
+    // 不推荐：每帧执行重操作
+    // FindObjectsOfType<Enemy>(); // 避免
+}
+```
+
+### 4. 转换回调
+使用 `OnTransition()` 处理转换时的副作用：
+
+```csharp
+public class PatrolToChaseTransition : FSMObject.FSMTranslation
+{
+    public override bool IsValid => playerDistance < chaseRange;
+    public override string NextObject => "Chase";
+
+    internal override void OnTransition()
+    {
+        enemy.AlertNearbyAllies();  // 转换时通知盟友
+        PlayAlertSound();           // 播放警报音效
+    }
+}
+```

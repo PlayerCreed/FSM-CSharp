@@ -1,32 +1,29 @@
 # FSM-CSharp
 
-A flexible and efficient Finite State Machine (FSM) implementation in C#, designed for behavior-driven development in game development and simulation systems.
+一个灵活高效的 C# 有限状态机（FSM）实现，专为游戏开发和仿真系统的行为驱动设计而打造。
 
-## Features
+## 特性
 
-- **Hierarchical State Machine**: Support for nested states via `FSMStateLayer`
-- **Dual Identifier System**: Use `int Key` for performance or `string Name` for readability
-- **Event-Driven Transitions**: Define custom transition conditions with `FSMTranslation`
-- **Lifecycle Hooks**: `OnStateEnter`, `OnUpdate`, `OnStateExit` callbacks
-- **Auto-Registration**: Transitions automatically register with their parent state
-- **Robust Error Handling**: Comprehensive validation for edge cases
-- **Backward Compatible**: Existing string-based code continues to work
+- **层级状态机**：通过 `FSMStateLayer` 支持嵌套状态
+- **事件驱动转换**：使用 `FSMTranslation` 定义自定义转换条件
+- **生命周期钩子**：`OnStateEnter`、`OnUpdate`、`OnStateExit` 回调
+- **自动注册**：转换自动注册到父状态，无需手动管理
+- **健壮的错误处理**：完善的边界情况验证
+- **转换回调**：支持在状态转换时执行额外逻辑
 
-## Installation
+## 安装
 
-Clone the repository and include the `Fox.FSM` namespace in your project:
+克隆仓库并在项目中引用 `Fox.FSM` 命名空间：
 
 ```csharp
 using Fox.FSM;
 ```
 
-## Quick Start
-
-### 使用字符串名称 (String Name)
+## 快速开始
 
 ```csharp
-// 1. Define your driver
-public class MyFSM : FSMDriver
+// 1. 定义驱动器
+public class PlayerFSM : FSMDriver
 {
     protected override string InitialObject => "Idle";
 
@@ -34,10 +31,11 @@ public class MyFSM : FSMDriver
     {
         new IdleState(this);
         new RunState(this);
+        new JumpState(this);
     }
 }
 
-// 2. Define states
+// 2. 定义状态
 public class IdleState : FSMState
 {
     public IdleState(FSMStateLayer layer) : base("Idle", layer)
@@ -45,62 +43,23 @@ public class IdleState : FSMState
         new IdleToRunTransition(this);
     }
 
-    internal override void OnStateEnter() => Console.WriteLine("Entering Idle");
+    internal override void OnStateEnter() => Console.WriteLine("进入空闲状态");
+    internal override void OnUpdate() => Console.WriteLine("空闲中...");
+    internal override void OnStateExit() => Console.WriteLine("离开空闲状态");
 }
 
-// 3. Define transitions (using string name)
+// 3. 定义转换
 public class IdleToRunTransition : FSMObject.FSMTranslation
 {
-    public override bool IsValid => Input.GetKey(KeyCode.Space);
+    public override bool IsValid => Input.IsMoving;
     public override string NextObject => "Run";
 
     public IdleToRunTransition(FSMObject ob) : base(ob) { }
 }
-```
 
-### 使用整数键 (Integer Key) - 高性能模式
-
-```csharp
-// 1. Define your driver with int key
-public class MyFSM : FSMDriver
-{
-    protected override int InitialKey => 1; // Idle state key
-
-    protected override void InitObject()
-    {
-        new IdleState(this);
-        new RunState(this);
-    }
-}
-
-// 2. Define states with int keys
-public class IdleState : FSMState
-{
-    public IdleState(FSMStateLayer layer) : base(1, layer) // Key = 1
-    {
-        new IdleToRunTransition(this);
-    }
-}
-
-public class RunState : FSMState
-{
-    public RunState(FSMStateLayer layer) : base(2, layer) // Key = 2
-    {
-    }
-}
-
-// 3. Define transitions with int keys (faster lookup)
-public class IdleToRunTransition : FSMObject.FSMTranslation
-{
-    public override bool IsValid => Input.GetKey(KeyCode.Space);
-    public override int NextKey => 2; // Direct key reference
-
-    public IdleToRunTransition(FSMObject ob) : base(ob) { }
-}
-
-// 4. Use in game loop
-var fsm = new MyFSM("PlayerFSM");
-fsm.isEnable = true;
+// 4. 在游戏循环中使用
+var fsm = new PlayerFSM("Player");
+fsm.IsEnabled = true;
 
 void Update()
 {
@@ -108,35 +67,39 @@ void Update()
 }
 ```
 
-## 标识符系统 (Identifier System)
+## 文档
 
-| 属性 | 类型 | 用途 | 性能 |
-|------|------|------|------|
-| `Key` | `int` | 主键，用于内部查找和比较 | 高 |
-| `Name` | `string` | 辅助描述，用于调试和日志 | 中 |
+| 文档 | 说明 |
+|------|------|
+| [快速入门指南](docs/generated/getting-started.md) | 五分钟上手教程 |
+| [API 参考文档](docs/generated/api-reference.md) | 完整 API 说明 |
+| [架构概述](docs/generated/overview.md) | 设计原理和最佳实践 |
 
-### 构造函数行为
+## 示例
 
-| 构造方式 | Key 值 | Name 值 |
-|---------|--------|---------|
-| `new FSMObject(int key, layer)` | `key` | `null` |
-| `new FSMObject(string name, layer)` | `name.GetHashCode()` | `name` |
+| 示例 | 说明 |
+|------|------|
+| [基础用法](examples/BasicUsage.cs) | 玩家状态机：Idle → Run → Jump |
+| [高级用法](examples/AdvancedUsage.cs) | 敌人 AI：巡逻、追逐、攻击，带转换回调 |
+| [层级状态机](examples/HierarchicalUsage.cs) | 角色战斗系统：地面/空中层级嵌套 |
 
-## Documentation
-
-- [API Reference](docs/generated/api-reference.md)
-- [Architecture Overview](docs/generated/overview.md)
-- [Examples](examples/)
-
-## Class Hierarchy
+## 类层次结构
 
 ```
-FSMObject (base)
-├── FSMState (leaf state)
-└── FSMStateLayer (state container)
-    └── FSMDriver (root driver)
+FSMObject (基类)
+├── FSMState (叶子状态)
+└── FSMStateLayer (状态容器)
+    └── FSMDriver (根驱动器)
 ```
 
-## License
+## 状态生命周期
+
+```
+OnStateEnter() → OnUpdate() → OnStateExit()
+      ↑                            ↓
+      └──── OnTransition() ←───────┘
+```
+
+## 许可证
 
 MIT License
