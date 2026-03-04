@@ -9,6 +9,7 @@
 - Git commit message：英文，遵循 Conventional Commits
 - CLI 用户面向的输出信息：英文（面向国际用户）或中文（仅内部使用）
 - 文件名和路径：仅使用 ASCII 字符
+- 所有文档：中文
 
 ## Claude Code 配置
 当前项目已集成 Claude Code 并实现以下配置：
@@ -21,6 +22,7 @@
 - **输出目录：**
   - 日志文件：`./logs/`
   - 错误报告：`./reports/errors/`
+- **需求文档目录：** `./docs/requirements/`
 
 ## 自动生成的内容
 - 测试用例（覆盖路径：`src/` 和 `fsm/`）

@@ -22,7 +22,7 @@
       "generate_use_cases": "true",
       "include_default_assertions": "true",
       "cover_paths": ["src/", "fsm/"],
-      "test_output_directory": "./tests/"
+      "test_output_directory": "./tests/generated/"
     }
   },
   "documentation": {
@@ -30,7 +30,7 @@
     "include": ["README.md", "docs/"],
     "integrate_examples": true,
     "examples_path": "./examples/",
-    "output_directory": "./docs/"
+    "output_directory": "./docs/generated/"
   },
   "claude_code_settings": {
     "ai_assistance": {
