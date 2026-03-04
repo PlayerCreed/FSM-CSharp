@@ -42,14 +42,14 @@ namespace Fox.FSM
             this.name = name;
         }
 
-        internal void AddTranslation(FSMTranslation translation)
+        private void AddTranslation(FSMTranslation translation)
         {
             translations.Add(translation);
         }
 
         private FSMObject GetRoot(FSMObject layer)
         {
-            if (layer == layer.parent)
+            if (layer == null)
             {
                 return null;
             }
@@ -57,10 +57,11 @@ namespace Fox.FSM
             {
                 return layer;
             }
-            else
+            if (layer == layer.parent)
             {
-                return GetRoot(layer.parent);
+                return null;
             }
+            return GetRoot(layer.parent);
         }
 
         internal virtual void OnStateEnter() { }

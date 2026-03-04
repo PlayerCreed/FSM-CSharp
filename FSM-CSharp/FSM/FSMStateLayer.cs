@@ -19,6 +19,10 @@ namespace Fox.FSM
             {
                 activeObject = fsmobject;
             }
+            else
+            {
+                throw new System.InvalidOperationException($"InitialObject '{InitialObject}' not found in FSMStateLayer '{name}'. Ensure InitObject() adds the state before constructor completes.");
+            }
         }
 
         /// <summary>
@@ -28,6 +32,10 @@ namespace Fox.FSM
 
         internal void AddObject(string name, FSMObject state)
         {
+            if (objects.ContainsKey(name))
+            {
+                throw new System.ArgumentException($"FSMObject with name '{name}' already exists in this layer.", nameof(name));
+            }
             objects.Add(name, state);
         }
 
@@ -49,7 +57,7 @@ namespace Fox.FSM
                 {
                     if (!objects.TryGetValue(translation.NextObject, out FSMObject fsmobject))
                     {
-                        return;
+                        throw new System.InvalidOperationException($"Transition target state '{translation.NextObject}' not found in FSMStateLayer.");
                     }
                     activeObject.OnStateExit();
                     activeObject = fsmobject;
