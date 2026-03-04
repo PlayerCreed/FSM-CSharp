@@ -1,26 +1,30 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace Fox.FSM
 {
     /// <summary>
-    /// 有限状态机基类
+    /// Root driver class for the state machine. Entry point for game loop integration.
     /// </summary>
     public abstract class FSMDriver : FSMStateLayer
     {
+        /// <summary>
+        /// Controls whether Update() processes the state machine.
+        /// </summary>
+        public bool IsEnabled { get; set; } = false;
 
-        public bool isEnable = false;
-
+        /// <summary>
+        /// Creates a new FSMDriver with the specified name.
+        /// </summary>
+        /// <param name="name">Unique identifier for this driver.</param>
         protected FSMDriver(string name) : base(name, null)
         {
         }
 
+        /// <summary>
+        /// Updates the state machine. Call this method each frame from your game loop.
+        /// Only processes when IsEnabled is true.
+        /// </summary>
         public void Update()
         {
-            if (!isEnable)
+            if (!IsEnabled)
                 return;
             OnUpdate();
         }
