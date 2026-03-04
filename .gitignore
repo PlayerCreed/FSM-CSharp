@@ -1,0 +1,14 @@
+# Visual Studio
+.vs/
+.vscode/
+bin/
+obj/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.log
+
+# C#
+*.dll
+*.pdb
